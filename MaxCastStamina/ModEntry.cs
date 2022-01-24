@@ -12,7 +12,6 @@ namespace MaxCastStamina
         float newCastPower;
         float oldStamina;
         float newStamina;
-        bool hasMaxCasted;
         public override void Entry(IModHelper helper)
         {
             helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
@@ -28,16 +27,11 @@ namespace MaxCastStamina
                 {
                     if (newCastPower == oldCastPower)
                     {
-                        hasMaxCasted = true;
-                    }
-                }
-                if (hasMaxCasted)
-                {
-                    if (newStamina < oldStamina)
-                    {
-                        Game1.player.stamina = oldStamina;
-                        rod.castingPower = 0;
-                        hasMaxCasted = false;
+                        if (newStamina < oldStamina)
+                        {
+                            rod.castingPower = 0;
+                            Game1.player.stamina = oldStamina;
+                        }
                     }
                 }
                 oldCastPower = newCastPower;

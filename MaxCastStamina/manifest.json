@@ -5,5 +5,5 @@
   "Description": "Doesn't use stamina if you get a max cast in fishing",
   "UniqueID": "StultusV.MaxCastStamina",
   "EntryDll": "MaxCastStamina.dll",
-  "UpdateKeys": []
+  "UpdateKeys": [ "Nexus:10794" ]
 }
