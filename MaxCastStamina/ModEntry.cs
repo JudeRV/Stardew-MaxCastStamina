@@ -1,4 +1,4 @@
-﻿using System;
+﻿using GenericModConfigMenu;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -8,6 +8,9 @@ namespace MaxCastStamina
 {
     public class ModEntry : Mod
     {
+        ModConfig? config;
+        int staminaToRestore = 0;
+
         float oldCastPower;
         float newCastPower;
 
@@ -15,8 +18,41 @@ namespace MaxCastStamina
         float newStamina;
 
         public override void Entry(IModHelper helper)
-        {
+        {       
+            config = helper.ReadConfig<ModConfig>();
+            if (config is null)
+            {
+                Monitor.Log("Couldn't load config -- setting StaminaToRestore to default", LogLevel.Warn);
+            }
+            else
+            {
+                staminaToRestore = config.StaminaToRestore;
+            }
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
+            helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+        }
+
+        private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
+        {
+            var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+            if (configMenu is null)
+            {
+                return;
+            }
+
+            configMenu.Register(
+                mod: ModManifest,
+                reset: () => config = new ModConfig(),
+                save: () => Helper.WriteConfig(config)
+                );
+
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Amount of stamina to restore",
+                tooltip: () => "The amount of stamina that should be restored upon a max cast. When set to 0 (default), this will restore the vanilla amount of stamina to stay at the same amount. Change this if you have other mods that modify stamina for this event, or for fun :D",
+                getValue: () => staminaToRestore,
+                setValue: value => config.StaminaToRestore = staminaToRestore = value
+                );
         }
 
         private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
@@ -42,7 +78,10 @@ namespace MaxCastStamina
                             }
                             // Reset casting power for next time and give player their stamina back
                             rod.castingPower = 0;
-                            Game1.player.stamina = oldStamina;
+                            // Restore default amount if not specified in config
+                            float restoreAmount = staminaToRestore == 0 ? oldStamina - newStamina : staminaToRestore;
+                            Game1.player.stamina += restoreAmount;
+                            Monitor.Log($"Restoring {restoreAmount} stamina for a max cast. Nice shot!", LogLevel.Trace);
                         }
                     }
                 }
@@ -51,5 +90,9 @@ namespace MaxCastStamina
                 oldStamina = newStamina;
             }
         }
+    }
+    public sealed class ModConfig
+    {
+        public int StaminaToRestore { get; set; } = 0;
     }
 }
