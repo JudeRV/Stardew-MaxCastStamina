@@ -80,8 +80,13 @@ namespace MaxCastStamina
                             rod.castingPower = 0;
                             // Restore default amount if not specified in config
                             float restoreAmount = staminaToRestore == 0 ? oldStamina - newStamina : staminaToRestore;
+                            if (newStamina + restoreAmount > Game1.player.maxStamina.Value)
+                            {
+                                restoreAmount = Game1.player.maxStamina.Value - newStamina;
+                            }
+
                             Game1.player.stamina += restoreAmount;
-                            Monitor.Log($"Restoring {restoreAmount} stamina for a max cast. Nice shot!", LogLevel.Trace);
+                            Monitor.Log($"Restoring {Math.Round(restoreAmount)} stamina for a max cast. Nice shot!", LogLevel.Trace);
                         }
                     }
                 }
